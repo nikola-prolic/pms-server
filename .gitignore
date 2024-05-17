@@ -1,0 +1,7 @@
+# dependencies
+/node_modules
+<<<<<<< Updated upstream
+package-lock.json
+=======
+.env
+>>>>>>> Stashed changes

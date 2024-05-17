@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Invite {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId @unique
+  userEmail String @unique
+  organizationId String @db.ObjectId
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user User @relation(fields:[userId], references: [id])
+}
+
+model User {
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  email String @unique
+  organizationId String? @db.ObjectId
+
+  organization Organization? @relation("organizationUsers", fields: [organizationId], references: [id])
+
+  invite Invite?
+  tasks Task[]
+  projects Project[]
+}
+
+model Organization {
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  adminId String @db.ObjectId @unique
+
+  users User[] @relation("organizationUsers")
+  projects Project[]
+  invites Invite[]
+}
+
+
+model Project {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  estimatedHours Int
+  actualHours Int
+  status  Status
+  organizationId String @db.ObjectId
+  deadline  DateTime
+  createdAt DateTime @default(now())
+  startedAt DateTime?
+  completedAt DateTime?
+  projectOwnerId String @db.ObjectId
+
+  stakeHolders String[]
+  organization Organization @relation(fields: [organizationId], references: [id])
+  projectOwner User @relation(fields: [projectOwnerId], references: [id])
+  tasks Task[]
+}
+
+model Task {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  estimatedHours Int
+  actualHours Int
+  status  Status
+  deadline  DateTime
+  createdAt DateTime @default(now())
+  startedAt DateTime?
+  completedAt DateTime?
+  projectId String @db.ObjectId
+  assignedUserId String? @db.ObjectId
+
+  project Project @relation(fields: [projectId], references:[id])
+  assignedUser User? @relation(fields: [assignedUserId], references:[id])
+}
+
+
+enum Status {
+  CREATED
+  IN_PROGRESS
+  COMPLETE
+  OVERDUE
+  ON_HOLD
+  CLOSED
+  BLOCKED
+}
